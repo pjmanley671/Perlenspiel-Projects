@@ -156,19 +156,19 @@ var G = function()
 	var myLoader = function(image)
 	{
 		var i;
-		if(image.source === "images/BackGround.bmp")
+		if(image.source === "https://pjmanley671.github.io/Game/images/BackGround.bmp")
 			PS.imageBlit(image, 0, 0);
 
-		if(image.source === "images/defenderBase.bmp")
+		if(image.source === "https://pjmanley671.github.io/Game/images/defenderBase.bmp")
 			PS.imageBlit(image, defender.x - 2, defender.y+1);
-		if(image.source === "images/defenderBotMid.bmp")
+		if(image.source === "https://pjmanley671.github.io/Game/images/defenderBotMid.bmp")
 			PS.imageBlit(image, defender.x - 2, defender.y);
-		if(image.source === "images/defenderTopMid.bmp")
+		if(image.source === "https://pjmanley671.github.io/Game/images/defenderTopMid.bmp")
 			PS.imageBlit(image, defender.x - 1, defender.y - 1);
-		if(image.source === "images/defenderTop.bmp")
+		if(image.source === "https://pjmanley671.github.io/Game/images/defenderTop.bmp")
 			PS.imageBlit(image, defender.x  - 0, defender.y - 2);
 
-		if(image.source === "images/Shot.bmp")
+		if(image.source === "https://pjmanley671.github.io/Game/images/Shot.bmp")
 		{
 			for(i = 0; i < shots.length; i++)
 			{
@@ -176,7 +176,7 @@ var G = function()
 			}
 		}
 
-		if(image.source === "images/UfoBase.bmp")
+		if(image.source === "https://pjmanley671.github.io/Game/images/UfoBase.bmp")
 		{
 			for(i = 0; i < ufos.length; i++)
 			{
@@ -184,7 +184,7 @@ var G = function()
 			}
 		}
 
-        if(image.source === "images/UfoMid.bmp")
+        if(image.source === "https://pjmanley671.github.io/Game/images/UfoMid.bmp")
         {
             for(i = 0; i < ufos.length; i++)
             {
@@ -192,7 +192,7 @@ var G = function()
             }
         }
 
-        if(image.source === "images/UfoTop.bmp")
+        if(image.source === "https://pjmanley671.github.io/Game/images/UfoTop.bmp")
         {
         	for(i = 0; i < ufos.length; i++)
         	{
@@ -226,50 +226,18 @@ var G = function()
 
 			drawMap : function() // draws the current instance of the game.
 			{
-				//var x, y, i, data;
-
-				/*for(x = 0; x < w; x++)
-				{
-					for(y = 0; y < h; y++)
-					{
-						data = PS.COLOR_BLACK;
-
-						if(defender.x === x && defender.y === y)
-                            data = defender.cColor;
-
-						if(shots.length > 0)
-						{
-                            for (i = 0; i < shots.length; i++)
-                            {
-                                if (shots[i].x === x && shots[i].y === y)
-                                    data = shots[i].cColor;
-                            }
-                        }
-
-                        if(ufos.length > 0)
-                        {
-                            for (i = 0; i < ufos.length; i++)
-                            {
-                                if (ufos[i].x === x && ufos[i].y === y)
-                                    data = ufos[i].cColor;
-                            }
-                        }
-
-                        PS.color(x, y, data);
-					}
-				}*/
-				PS.imageLoad("images/BackGround.bmp", myLoader, 1);
+				PS.imageLoad("https://pjmanley671.github.io/Game/images/BackGround.bmp", myLoader, 1);
 				
-				PS.imageLoad("images/defenderBase.bmp", myLoader, 2);
-				PS.imageLoad("images/defenderBotMid.bmp", myLoader, 2);
-				PS.imageLoad("images/defenderTopMid.bmp", myLoader, 2);
-				PS.imageLoad("images/defenderTop.bmp", myLoader, 2);
+				PS.imageLoad("https://pjmanley671.github.io/Game/images/defenderBase.bmp", myLoader, 2);
+				PS.imageLoad("https://pjmanley671.github.io/Game/images/defenderBotMid.bmp", myLoader, 2);
+				PS.imageLoad("https://pjmanley671.github.io/Game/images/defenderTopMid.bmp", myLoader, 2);
+				PS.imageLoad("https://pjmanley671.github.io/Game/images/defenderTop.bmp", myLoader, 2);
 
-				PS.imageLoad("images/Shot.bmp", myLoader, 2);
+				PS.imageLoad("https://pjmanley671.github.io/Game/images/Shot.bmp", myLoader, 2);
 
-				PS.imageLoad("images/UfoBase.bmp", myLoader, 2);
-				PS.imageLoad("images/UfoMid.bmp", myLoader, 2);
-				PS.imageLoad("images/UfoTop.bmp", myLoader, 2);
+				PS.imageLoad("https://pjmanley671.github.io/Game/images/UfoBase.bmp", myLoader, 2);
+				PS.imageLoad("https://pjmanley671.github.io/Game/images/UfoMid.bmp", myLoader, 2);
+				PS.imageLoad("https://pjmanley671.github.io/Game/images/UfoTop.bmp", myLoader, 2);
 
 			},
 
