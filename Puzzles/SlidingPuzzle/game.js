@@ -184,12 +184,11 @@ var G = function ()
                 if (x === tSwift.x + 1 || x === tSwift.x - 1) {
                     if (y === tSwift.y) {
                         exports.move(x - tSwift.x, y - tSwift.y);
-                        PS.audioPlay("fx_click");
+                        
                     } else return;
                 } else if (y === tSwift.y + 1 || y === tSwift.y - 1) {
                     if (x === tSwift.x) {
                         exports.move(x - tSwift.x, y - tSwift.y);
-                        PS.audioPlay("fx_click");
                     } else return;
                 } else return;
             },
@@ -205,6 +204,7 @@ var G = function ()
                 if (nx < 0 || ny < 0) return;
 
                 exports.swap(nx, ny);
+				PS.audioPlay("fx_click");
 
                 // set the next position of the player character.
                 tSwift.x = nx;
@@ -277,36 +277,41 @@ var drawMap = function(map, w, h, i)
 };
 
 PS.keyDown = function( key, shift, ctrl, options ) {
-	if(key !== 114) {
-        if (G.checkWin() !== true) {
-            switch (key) {
-                case PS.KEY_ARROW_UP:
-                    G.move(0, -1);
-                    break;
-                case PS.KEY_ARROW_DOWN:
-                    G.move(0, 1);
-                    break;
-                case PS.KEY_ARROW_LEFT:
-                    G.move(-1, 0);
-                    break;
-                case PS.KEY_ARROW_RIGHT:
-                    G.move(1, 0);
-                    break;
-            }
-        } else
-            PS.statusText("You Win!");
-    }else
-    	G.runRestart();
+        
+		switch (key) 
+		{
+            case PS.KEY_ARROW_UP:
+			case 119:
+				G.move(0, -1);
+				break;
+            case PS.KEY_ARROW_DOWN:
+			case 115:
+                G.move(0, 1);
+                break;
+            case PS.KEY_ARROW_LEFT:
+			case 97:
+                G.move(-1, 0);
+                break;
+            case PS.KEY_ARROW_RIGHT:
+			case 100:
+                G.move(1, 0);
+                break;
+			case 114:
+				G.runRestart();
+				break;
+        }
+		
+		if(G.checkWin())
+			PS.statusText("You win!");
 };
 
 PS.touch = function( x, y, data, options ) {
     if (PS.color(x, y) === PS.COLOR_GRAY) {
         G.runRestart();
     } else {
-        if (G.checkWin() !== true) {
-            G.moveByClick(x, y);
-        } else
-            PS.statusText("You Win!");
+		G.moveByClick(x, y);
+		if(G.checkWin())
+			PS.statusText("You win!");
     }
 };
 
