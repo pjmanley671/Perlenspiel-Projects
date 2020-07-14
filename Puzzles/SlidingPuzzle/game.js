@@ -56,259 +56,196 @@ Any value returned is ignored.
  *		Project was originally a school project.
  *
  * Going forward: 
- *		Add in audio cues to enhance player feed back.
- *		Fix hover issue for resolving completion.
  *		Add in cover image for detailing puzzle layout and interactions.
  *		
- * Version: 2.0
+ * Version: 2.1
  * Perlenspiel Package: 3.3
 */
 
 var G = function ()
 {
-	var w = 4, h = 4;
-
-	var myTimer;
-
-	var tSwift = {x:0, y:0, blankSpace:PS.COLOR_WHITE};
-
-	var cColor = [PS.COLOR_ORANGE, PS.COLOR_GREEN, PS.COLOR_INDIGO];
-
-	var mDO = [ // Map Data Original
-		/*cColor[0], cColor[1], cColor[2],
-        cColor[0], cColor[1], cColor[2],
-        cColor[0], cColor[1], tSwift.blankSpace*/
-	];
-
-	var mDC = [ // is a copy of the Original Map Data.
-		/*mDO[0], mDO[1], mDO[2],
-        mDO[3], mDO[4], mDO[5],
-        mDO[6], mDO[7], mDO[8]*/
-	];
-
+	var mapData = [];
+	var colorOptions = [PS.COLOR_ORANGE, PS.COLOR_GREEN, PS.COLOR_INDIGO];
+	var shuffle = false;
+	var emptyTile = 
+	{
+		x:3,
+		y:3,
+		color:PS.COLOR_WHITE
+	};
+	
+	var SetupGrid = function()
+	{
+		PS.gridSize(9, 4);
+		PS.color(4, PS.ALL, PS.COLOR_BLACK);
+		PS.color(4, 0, PS.COLOR_GRAY);
+		PS.glyph(4, 0, "R");
+		PS.border(PS.ALL, PS.ALL, 0);
+	};
+	
+	var FillMapData = function()
+	{
+		var x, y, pos;
+		
+		for(y = 0; y < 4; y++)
+		{
+			for(x = 0; x < 4; x++)
+			{
+				pos = (y * 4) + x;
+				mapData[pos] = colorOptions[PS.random(3) - 1];
+			}
+		}
+		
+		mapData[pos] = emptyTile.color;
+	};
+	
+	var DrawMap = function()
+	{
+		var x, y, data;
+		
+		for(y = 0; y < 4; y++)
+		{
+			for(x = 0; x < 4; x++)
+			{
+				data = mapData[( y * 4 ) + x];
+				PS.color( x, y, data );
+				PS.color( (x + 5), y, data );
+			}
+		}
+	};
+	
+	var ValidateSwap = function(nx, ny)
+	{
+		if(nx > -1 && ny > -1)
+			if(nx < 4 && ny < 4)
+				if(Math.abs(nx - emptyTile.x) < 2 && Math.abs(ny - emptyTile.y) < 2)
+					return true;
+				
+		return false;
+	};
+	
+	var CheckWin = function()
+	{
+		var win = true;
+		
+		for(var x = 0; x < 4; x++)
+		{
+			for(var y = 0; y < 4; y++)
+			{
+				if(mapData[(y * 4) + x] !== PS.color(x, y))
+					win = false;
+			}
+		}
+		
+		return win;
+	};
+	
+	var SwapTiles = function(nx, ny)
+	{
+		if(ValidateSwap(nx, ny))
+		{
+			PS.color(emptyTile.x, emptyTile.y, PS.color(nx, ny));
+			PS.color(nx, ny, emptyTile.color);
+			emptyTile.x = nx;
+			emptyTile.y = ny;
+			
+			if(!shuffle)
+			{
+				PS.audioPlay("fx_swoosh");	
+				
+				if(emptyTile.x === 3 && emptyTile.y === 3)
+					if(CheckWin())
+					{ 
+						PS.statusText("Win! Press r to reset.");
+						PS.audioPlay("fx_coin" + PS.random(8));
+					}
+			}
+		}
+	};
+	
+	var ShuffleBoard = function()
+	{
+		shuffle = true;
+		var minNumMoves = Math.pow(4, 4);
+		var i = 0, x = 0, y = 0;
+		do
+		{
+			x = (x === 0) ? PS.random(3) - 2 : 0;
+			y = (x != 0) ? PS.random(3) - 2 : 0;
+			
+			SwapTiles(emptyTile.x + x, emptyTile.y + y);
+			
+			if(i < minNumMoves)i++;
+			
+			if(emptyTile.x + emptyTile.y < 6 )i--;
+		}while(i < minNumMoves);
+		
+		shuffle = false;
+	};
+	
 	var exports =
-        {
-            init: function () {
-                PS.gridSize((w * 2 + 1), h);
-                PS.color(w, PS.ALL, PS.COLOR_BLACK);
-                PS.color(w, Math.floor(h / 2), PS.COLOR_GRAY);
-                PS.statusText( "Sliding Puzzle" );
-
-                PS.glyph(w, Math.floor(h / 2), "R");
-                PS.border(PS.ALL, PS.ALL, 0);
-
-                exports.rndStart();
-                drawMap(mDO, w, h, w + 1);
-                exports.getPos();
-
-                exports.updateMap();
-                exports.shuffle();
-                drawMap(mDC, w, h, 0);
-            },
-
-            rndStart: function () // randomizes original Map
-            {
-                var x, y, pos;
-
-                for (y = 0; y < h; y++) {
-                    for (x = 0; x < w; x++) {
-                        pos = (y * w) + x;
-                        if (y !== h - 1 || x !== w - 1) {
-                            mDO[pos] = cColor[(PS.random(3) - 1)];
-                        } else
-                            mDO[pos] = tSwift.blankSpace;
-                    }
-                }
-            },
-
-            getPos: function () // returns the position of the blank space (player character)
-            {
-                var x, y;
-
-                for (y = 0; y < h; y++) {
-                    for (x = 0; x < w; x++) {
-                        if (mDO[(y * w) + x] === tSwift.blankSpace) {
-                            tSwift.x = x;
-                            tSwift.y = y;
-                        }
-                    }
-                }
-            },
-
-            updateMap: function () // updates the second data table to reflect the newly randomized original table.
-            {
-                var x, y, pos;
-                for (y = 0; y < h; y++) {
-                    for (x = 0; x < w; x++) {
-                        pos = (y * w) + x;
-
-                        mDC[pos] = mDO[pos];
-                    }
-                }
-            },
-
-            shuffle: function () // shuffles the player around the map according to the move mechanic and then returns the player to start.
-            {
-                var numRndMoves = Math.pow(w, h);
-                var i, mx, my;
-
-                for (i = 0; i < numRndMoves; i++) {
-
-                    if (PS.random(2) - 1 === 0) {
-                        // move X
-                        mx = (PS.random(2) - 1 === 0) ? -1 : +1;
-                        my = 0;
-                    } else {
-                        mx = 0;
-                        my = (PS.random(2) - 1 === 0) ? -1 : +1;
-                    }
-
-                    exports.move(mx, my);
-                }
-
-                exports.returnStart();
-            },
-
-            returnStart: function () // returns the player to start.
-            {
-                var x, y;
-                for (y = tSwift.y; y < h; y++)
-                    exports.move(0, y - tSwift.y);
-
-                for (x = tSwift.x; x < w; x++)
-                    exports.move(x - tSwift.x, 0);
-            },
-
-            moveByClick: function (x, y) // checks to see if the desired location is within move distance then moves if it is.
-            {
-                if (x === tSwift.x + 1 || x === tSwift.x - 1) {
-                    if (y === tSwift.y) {
-                        exports.move(x - tSwift.x, y - tSwift.y);
-                        PS.audioPlay("fx_click");
-                    } else return;
-                } else if (y === tSwift.y + 1 || y === tSwift.y - 1) {
-                    if (x === tSwift.x) {
-                        exports.move(x - tSwift.x, y - tSwift.y);
-                        PS.audioPlay("fx_click");
-                    } else return;
-                } else return;
-            },
-
-            move: function (x, y) // moves the position of the blank space (player character)
-            {
-                // get the next position information.
-                var nx = tSwift.x + x;
-                var ny = tSwift.y + y;
-
-                // check to see if next area is out of bounds.
-                if (nx >= w || ny >= h) return;
-                if (nx < 0 || ny < 0) return;
-
-                exports.swap(nx, ny);
-
-                // set the next position of the player character.
-                tSwift.x = nx;
-                tSwift.y = ny;
-
-                // display the changed positions.
-                drawMap(mDC, w, h, 0);
-            },
-
-            swap: function (nx, ny) // swaps the next position of the player character with the next position.
-            {
-                var temp;
-
-                temp = mDC[(ny * w) + nx];
-                mDC[(ny * w) + nx] = mDC[(tSwift.y * w) + tSwift.x];
-                mDC[(tSwift.y * w) + tSwift.x] = temp;
-            },
-
-            checkWin: function () // determines the state of the game (i.e a player has achieved victory or not)
-            {
-                var x, y, win = true, pos;
-                for (y = 0; y < h; y++) {
-                    for (x = 0; x < w; x++) {
-                        pos = (y * w) + x;
-                        if (mDO[pos] != mDC[pos])
-                            win = false;
-                    }
-                }
-                return win;
-            },
-
-            runRestart: function () // restarts the board and refreshes all beads.
-            {
-                PS.color(w, PS.ALL, PS.COLOR_BLACK);
-                PS.color(w, Math.floor(h / 2), PS.COLOR_GRAY);
-
-                exports.rndStart();
-                drawMap(mDO, w, h, w + 1);
-                exports.getPos();
-
-                exports.updateMap();
-                exports.shuffle();
-                drawMap(mDC, w, h, 0);
-
-                PS.statusText( "Sliding Puzzle" );
-
-                PS.gridRefresh();
-            }
-        };
+	{
+		Init: function()
+		{	
+			PS.statusText("Sliding Puzzle");
+			
+			SetupGrid();
+			emptyTile.x = 3;
+			emptyTile.y = 3;
+			FillMapData();
+			DrawMap();
+			ShuffleBoard();
+			
+			PS.scale(PS.ALL, PS.ALL, 85);
+		},
+		
+		OnPress: function(key, shift, ctrl, options)
+		{
+			var x = 0, y = 0;
+			switch (key) 
+			{
+				case PS.KEY_ARROW_UP:
+				case 119:
+					y -= 1;
+					break;
+				case PS.KEY_ARROW_DOWN:
+				case 115:
+					y += 1;
+					break;
+				case PS.KEY_ARROW_LEFT:
+				case 97:
+					x -= 1;
+					break;
+				case PS.KEY_ARROW_RIGHT:
+				case 100:
+					x += 1;
+					break;
+				case 114:
+					exports.Init();
+					break;
+				default:
+					break;
+			}
+			
+			SwapTiles(emptyTile.x + x, emptyTile.y + y);
+		},
+		
+		OnTouch: function(x, y, data, options)
+		{
+			SwapTiles(x, y);
+			
+			if(x === 4 && y === 0)
+				exports.Init();
+		}
+		
+	};
 	return exports;
 }();
 
 
-PS.init = G.init;
-
-
-var drawMap = function(map, w, h, i)
-{
-    var x, y, j, data;
-
-    for(y = 0; y < h; y++)
-    {
-        for(x = 0; x < w; x++)
-        {
-            j = x + i;
-            data = map[( y * w )+ x];
-            PS.color( j, y, data );
-        }
-    }
-};
-
-PS.keyDown = function( key, shift, ctrl, options ) {
-	if(key !== 114) {
-        if (G.checkWin() !== true) {
-            switch (key) {
-                case PS.KEY_ARROW_UP:
-                    G.move(0, -1);
-                    break;
-                case PS.KEY_ARROW_DOWN:
-                    G.move(0, 1);
-                    break;
-                case PS.KEY_ARROW_LEFT:
-                    G.move(-1, 0);
-                    break;
-                case PS.KEY_ARROW_RIGHT:
-                    G.move(1, 0);
-                    break;
-            }
-        } else
-            PS.statusText("You Win!");
-    }else
-    	G.runRestart();
-};
-
-PS.touch = function( x, y, data, options ) {
-    if (PS.color(x, y) === PS.COLOR_GRAY) {
-        G.runRestart();
-    } else {
-        if (G.checkWin() !== true) {
-            G.moveByClick(x, y);
-        } else
-            PS.statusText("You Win!");
-    }
-};
+PS.init = G.Init;
+PS.keyDown = G.OnPress;
+PS.touch = G.OnTouch;
 
 PS.shutdown = function( options ) {
 };
