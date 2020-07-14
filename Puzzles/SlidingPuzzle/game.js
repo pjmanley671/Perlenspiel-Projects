@@ -56,8 +56,6 @@ Any value returned is ignored.
  *		Project was originally a school project.
  *
  * Going forward: 
- *		Add in audio cues to enhance player feed back.
- *		Fix hover issue for resolving completion.
  *		Add in cover image for detailing puzzle layout and interactions.
  *		
  * Version: 2.1
@@ -153,11 +151,14 @@ var G = function ()
 			
 			if(!shuffle)
 			{
-				PS.audioPlay("fx_click");				
+				PS.audioPlay("fx_swoosh");	
+				
 				if(emptyTile.x === 3 && emptyTile.y === 3)
-				{
-					if(CheckWin()) PS.statusText("Win!");
-				}
+					if(CheckWin())
+					{ 
+						PS.statusText("Win! Press r to reset.");
+						PS.audioPlay("fx_coin" + PS.random(8));
+					}
 			}
 		}
 	};
@@ -186,17 +187,21 @@ var G = function ()
 	{
 		Init: function()
 		{	
+			PS.statusText("Sliding Puzzle");
+			
 			SetupGrid();
 			emptyTile.x = 3;
 			emptyTile.y = 3;
 			FillMapData();
 			DrawMap();
 			ShuffleBoard();
+			
+			PS.scale(PS.ALL, PS.ALL, 85);
 		},
 		
 		OnPress: function(key, shift, ctrl, options)
 		{
-			var x, y;
+			var x = 0, y = 0;
 			switch (key) 
 			{
 				case PS.KEY_ARROW_UP:
