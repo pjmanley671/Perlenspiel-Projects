@@ -79,7 +79,7 @@ var G = function()
             PS.gridSize( 7, 7 );
 
             PS.gridColor( 0, 0, 0);
-            var myFunction = PS.timerStart( 10, timeFunction );
+            var myFunction = PS.timerStart( 9, timeFunction );
 
             PS.statusText( "Color Lock" );
             PS.statusColor( 201, 126, 0);
@@ -88,10 +88,7 @@ var G = function()
 
         checkClick : function (nx, ny)
 		{
-			if(Maps[(ny * 7) + nx] === 1)
-				return 1;
-			else
-				return 0;
+			return Maps[(ny * 7) + nx];
 		},
 
 		changeBeadStatus : function(x, y, v)
@@ -101,19 +98,13 @@ var G = function()
 
         checkTable : function ()
         {
-            var i = 0, j = 0;
-            for( ; i<49; i++ )
+            var j = 1;
+            for(var i = 0 ; i<49; i++ )
             {
-                if(Maps[i] === 1)
-                {
-                    j = 1;
-                }
-                else if(Maps[i] === 0)
-                {
-                    return 0;
-                }
+				if(Maps[i] === 0)
+                    j = 0;
             }
-            return 1;
+            return j;
         }
     };
 
