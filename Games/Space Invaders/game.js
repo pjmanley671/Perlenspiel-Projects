@@ -109,7 +109,7 @@ var G = function()
 
 		myUfo.SendToSpawn();
 		ufos.unshift(myUfo);
-	}
+	};
 
 	var OnTick = function()
 	{
@@ -123,7 +123,7 @@ var G = function()
 				gameStates.shot = true;
 				timerIntervals.defender = 0;
 			}
-		}
+		} // Handles the defenders ability to shoot.
 		
 		if(!gameStates.ufo)
 		{
@@ -133,13 +133,19 @@ var G = function()
 				gameStates.ufo = true;
 				timerIntervals.ufo = 0;
 			}
-		}
+		} // Handles the ufos ability to clone themself.
 		
 	};
+
+	var myLoader = function(image)
+	{
+		if(image.source === urlSource + "BackGround.bmp")
+			PS.imageBlit(image, 0, 0);
+	}
 	
 	var OnTick_Draw = function()
 	{
-
+		PS.imageLoad(urlSource + "BackGround.bmp", myLoader, 1);
 	};
 	
 	var ClearList = function(iList)
@@ -159,16 +165,19 @@ var G = function()
 	{
 		Init : function()
 		{
+			ClearList(shots);
+			ClearList(ufos);
+
 			PS.gridSize(width, height);
 			PS.border(PS.ALL, PS.ALL, 0);
 			PS.statusText("Space Invaders");
 			
+			defender.SendToSpawn();
+			MakeUFO();
+
 			gameStates.win = false;
 			gameStates.shot = true;
 			gameStates.ufo = true;
-			
-			ClearList(shots);
-			ClearList(ufos);
 			
 			myTimer = PS.timerStart(timerIntervals.update, OnTick);
 			drawTimer = PS.timerStart(timerIntervals.update, OnTick_Draw);
@@ -176,7 +185,46 @@ var G = function()
 		
 		KeyPress : function(key, shift, ctrl, options)
 		{
-			
+			if(gameStates.win)
+			{
+				switch(key)
+				{
+					case 114:
+						break;
+					default:
+						break;
+				}
+			}else
+			{
+				switch(key)
+				{
+					/* Defender Keys */
+					case 100: //PS.debug("KEY === 'D'\n");
+						defender.move(1);
+						break;
+					case 97: //PS.debug("KEY === 'A'\n");
+						defender.move(-1);
+						break;
+					case 32: //PS.debug("KEY === 'SPACE_BAR'\n");
+						//makeShot();
+						break;
+					
+					/* UFO Keys */
+					case PS.KEY_ARROW_UP:
+                        break;
+                    case PS.KEY_ARROW_DOWN:
+                        break;
+                    case PS.KEY_ARROW_RIGHT:
+                        break;
+                    case PS.KEY_ARROW_LEFT:
+                        break;
+                    case 47: //PS.debug("KEY === 'forward slash'\n")
+						MakeUFO();
+                        break;
+					default:
+						break;
+				}
+			}
 		},
 		
 		Close : function()
