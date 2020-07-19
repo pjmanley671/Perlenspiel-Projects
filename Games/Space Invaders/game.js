@@ -73,6 +73,44 @@ var G = function()
 	var timerIntervals = {update : 1, shot : 2, ufo : 120, defender : 4, step : 0};
 	var myTimer, drawTimer;
 	
+	var defender = 
+	{
+		x : 0, y : 0,
+		SendToSpawn : function()
+		{
+			this.x = Math.floor(width / 2);
+			this.y = height - 3;
+		},
+
+		move : function(px)
+		{
+			this.x += px;
+		}
+	};
+
+	var MakeUFO = function()
+	{
+		var myUfo = 
+		{
+			x : 0, y : 0,
+
+			SendToSpawn : function()
+			{
+				this.x = Math.floor(width / 2);
+				this.y = 2;
+			},
+
+			move : function(px, py)
+			{
+				this.x += px;
+				this.y += py;
+			}
+		};
+
+		myUfo.SendToSpawn();
+		ufos.unshift(myUfo);
+	}
+
 	var OnTick = function()
 	{
 		timerIntervals.step++;
@@ -101,7 +139,7 @@ var G = function()
 	
 	var OnTick_Draw = function()
 	{
-		
+
 	};
 	
 	var ClearList = function(iList)
@@ -133,6 +171,7 @@ var G = function()
 			ClearList(ufos);
 			
 			myTimer = PS.timerStart(timerIntervals.update, OnTick);
+			drawTimer = PS.timerStart(timerIntervals.update, OnTick_Draw);
 		},
 		
 		KeyPress : function(key, shift, ctrl, options)
@@ -142,7 +181,8 @@ var G = function()
 		
 		Close : function()
 		{
-			PS.timerStop(OnTick);
+			PS.timerStop(myTimer);
+			PS.timerStop(drawTimer);
 		}
 	};
 	
@@ -150,8 +190,8 @@ var G = function()
 }();
 
 PS.init = G.Init;
-PS.keyDown = G.KeyPress(key, shift, ctrl, options);
-PS.shutdown = G.Close();
+PS.keyDown = G.KeyPress;
+PS.shutdown = G.Close;
 
 PS.touch = function( x, y, data, options ) {};
 
