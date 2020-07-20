@@ -70,7 +70,7 @@ var G = function()
 	var width = 32, height = 32;
 	var shots = [null], ufos = [null];
 	var gameStates = {win: false, shot: false, ufo: false};
-	var timerIntervals = {update : 1, shot : 2, ufo : 120, defender : 4, step : 0};
+	var timerIntervals = {update : 1, shot : 2, ufo : 120, defender : 6, step : 0};
 	var myTimer, drawTimer;
 	
 	var defender = 
@@ -111,6 +111,29 @@ var G = function()
 		ufos.unshift(myUfo);
 	};
 
+	var MakeShot = function()
+	{
+		var myShot = 
+		{
+			x : 0, y : 0,
+
+			SendToSpawn : function()
+			{
+				this.x = defender.x + 2;
+				this.y = defender.y - 4;
+			},
+
+			Move : function()
+			{
+				this.y -= 1;
+			}
+		};
+
+		myShot.SendToSpawn();
+		shots.unshift(myShot);
+		PS.audioPlay("fx_bang");
+	};
+
 	var CheckAgainstBounds = function(px, py)
 	{
 		if(px > 0 && px < 32)
@@ -127,7 +150,7 @@ var G = function()
 		if(!gameStates.shot)
 		{
 			timerIntervals.defender++;
-			if(timerIntervals.defender == 4)
+			if(timerIntervals.defender == 6)
 			{
 				gameStates.shot = true;
 				timerIntervals.defender = 0;
@@ -143,7 +166,6 @@ var G = function()
 				timerIntervals.ufo = 0;
 			}
 		} // Handles the ufos ability to clone itself.
-		
 	};
 
 	var myLoader = function(image)
@@ -208,6 +230,17 @@ var G = function()
 		PS.imageLoad(urlSource + "UfoTop.bmp", myLoader, 2);
 
 		PS.imageLoad(urlSource + "Shot.bmp", myLoader, 2);
+
+		PS.debugClear();
+		if(!gameStates.shot)
+			PS.debug("Shot ready in " + (6 - timerIntervals.defender));
+		else
+			PS.debug("Shot ready!");
+		
+		if(!gameStates.ufo)
+			PS.debug("\nUfo ready in " + (120 - timerIntervals.ufo));
+		else
+			PS.debug("\nUfo ready!");
 	}; // Draws in order of bottom level to top level so the background doesn't overwrite anything.
 	
 	var ClearList = function(iList)
@@ -277,7 +310,8 @@ var G = function()
 							defender.move(-1);
 						break;
 					case 32: //PS.debug("KEY === 'SPACE_BAR'\n");
-						//makeShot();
+						MakeShot();
+						gameStates.shot = false;
 						break;
 					
 					/* UFO Keys */
@@ -311,6 +345,7 @@ var G = function()
                         break;
                     case 47: //PS.debug("KEY === 'forward slash'\n")
 						MakeUFO();
+						gameStates.ufo = false;
                         break;
 					default:
 						break;
