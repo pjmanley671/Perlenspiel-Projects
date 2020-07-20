@@ -78,7 +78,7 @@ var G = function()
 		x : 0, y : 0,
 		SendToSpawn : function()
 		{
-			this.x = Math.floor(width / 2);
+			this.x = Math.floor(width / 2) - 2;
 			this.y = height - 3;
 		},
 
@@ -96,8 +96,8 @@ var G = function()
 
 			SendToSpawn : function()
 			{
-				this.x = Math.floor(width / 2);
-				this.y = 2;
+				this.x = Math.floor(width / 2) - 2;
+				this.y = 4;
 			},
 
 			move : function(px, py)
@@ -109,6 +109,15 @@ var G = function()
 
 		myUfo.SendToSpawn();
 		ufos.unshift(myUfo);
+	};
+
+	var CheckAgainstBounds = function(px, py)
+	{
+		if(px > 0 && px < 32)
+			if(py > 0 && py < 32)
+				return true;
+		
+		return false;
 	};
 
 	var OnTick = function()
@@ -133,20 +142,73 @@ var G = function()
 				gameStates.ufo = true;
 				timerIntervals.ufo = 0;
 			}
-		} // Handles the ufos ability to clone themself.
+		} // Handles the ufos ability to clone itself.
 		
 	};
 
 	var myLoader = function(image)
 	{
-		if(image.source === urlSource + "BackGround.bmp")
-			PS.imageBlit(image, 0, 0);
-	}
+		switch(image.source.substring(urlSource.length))
+		{
+			case "BackGround.bmp":
+				PS.imageBlit(image, 0, 0);
+				break;
+			case "defenderBase.bmp":
+				PS.imageBlit(image, defender.x, defender.y);
+				break;
+			case "defenderBotMid.bmp":
+				PS.imageBlit(image, defender.x, defender.y - 1);
+				break;
+			case "defenderTopMid.bmp":
+				PS.imageBlit(image, defender.x + 1, defender.y - 2);
+				break;
+			case "defenderTop.bmp":
+				PS.imageBlit(image, defender.x + 2, defender.y - 3);
+				break;
+			case "UfoBase.bmp": 
+				for(var i = 0; i < ufos.length; i++)
+				{
+					PS.imageBlit(image, ufos[i].x, ufos[i].y);
+				}
+				break;
+			case "UfoMid.bmp":
+				for(var i = 0; i < ufos.length; i++)
+				{
+					PS.imageBlit(image, ufos[i].x + 1, ufos[i].y - 1);
+				}
+				break;
+			case "UfoTop.bmp":
+				for(var i = 0; i < ufos.length; i++)
+				{
+					PS.imageBlit(image, ufos[i].x + 2, ufos[i].y - 2);
+				}
+				break;
+			case "Shot.bmp":
+				for(var i = 0; i < shots.length; i++)
+				{
+					PS.imageBlit(image, shots[i].x, shots[i].y);
+				}
+				break;
+			default: 
+				break;
+		} // Using Switch Case to reduce complexity of condition statements.
+	};
 	
 	var OnTick_Draw = function()
 	{
 		PS.imageLoad(urlSource + "BackGround.bmp", myLoader, 1);
-	};
+
+		PS.imageLoad(urlSource + "defenderBase.bmp", myLoader, 2);
+		PS.imageLoad(urlSource + "defenderBotMid.bmp", myLoader, 2);
+		PS.imageLoad(urlSource + "defenderTopMid.bmp", myLoader, 2);
+		PS.imageLoad(urlSource + "defenderTop.bmp", myLoader, 2);
+
+		PS.imageLoad(urlSource + "UfoBase.bmp", myLoader, 2);
+		PS.imageLoad(urlSource + "UfoMid.bmp", myLoader, 2);
+		PS.imageLoad(urlSource + "UfoTop.bmp", myLoader, 2);
+
+		PS.imageLoad(urlSource + "Shot.bmp", myLoader, 2);
+	}; // Draws in order of bottom level to top level so the background doesn't overwrite anything.
 	
 	var ClearList = function(iList)
 	{
@@ -177,7 +239,10 @@ var G = function()
 
 			gameStates.win = false;
 			gameStates.shot = true;
-			gameStates.ufo = true;
+			gameStates.ufo = false;
+			
+			timerIntervals.ufo = 0;
+			timerIntervals.defender = 0;
 			
 			myTimer = PS.timerStart(timerIntervals.update, OnTick);
 			drawTimer = PS.timerStart(timerIntervals.update, OnTick_Draw);
@@ -185,11 +250,15 @@ var G = function()
 		
 		KeyPress : function(key, shift, ctrl, options)
 		{
+			/* TODO : Add in control logic to check if movement is in boundary or not. Add in control logic to check  to see if ufo is in the spawn location. */
 			if(gameStates.win)
 			{
 				switch(key)
 				{
-					case 114:
+					case 114: // stop all the timers so reset doesn't get angry.
+						PS.timerStop(myTimer);
+						PS.timerStop(drawTimer);
+						this.Init();
 						break;
 					default:
 						break;
@@ -200,10 +269,12 @@ var G = function()
 				{
 					/* Defender Keys */
 					case 100: //PS.debug("KEY === 'D'\n");
-						defender.move(1);
+						if(CheckAgainstBounds(defender.x + 5, defender.y))
+							defender.move(1);
 						break;
 					case 97: //PS.debug("KEY === 'A'\n");
-						defender.move(-1);
+						if(CheckAgainstBounds(defender.x, defender.y))
+							defender.move(-1);
 						break;
 					case 32: //PS.debug("KEY === 'SPACE_BAR'\n");
 						//makeShot();
@@ -211,12 +282,32 @@ var G = function()
 					
 					/* UFO Keys */
 					case PS.KEY_ARROW_UP:
+						for(var i = 0; i < ufos.length; i++)
+						{
+							if(CheckAgainstBounds(ufos[i].x, ufos[i].y - 2))
+								ufos[i].move(0, -1);
+						}
                         break;
                     case PS.KEY_ARROW_DOWN:
+						for(var i = 0; i < ufos.length; i++)
+						{
+							if(CheckAgainstBounds(ufos[i].x, ufos[i].y + 1))
+								ufos[i].move(0, 1);
+						}
                         break;
                     case PS.KEY_ARROW_RIGHT:
+						for(var i = 0; i < ufos.length; i++)
+						{
+							if(CheckAgainstBounds(ufos[i].x + 5, ufos[i].y))
+								ufos[i].move(1, 0);
+						}
                         break;
                     case PS.KEY_ARROW_LEFT:
+						for(var i = 0; i < ufos.length; i++)
+						{
+							if(CheckAgainstBounds(ufos[i].x, ufos[i].y))
+								ufos[i].move(-1, 0);
+						}
                         break;
                     case 47: //PS.debug("KEY === 'forward slash'\n")
 						MakeUFO();
@@ -231,6 +322,8 @@ var G = function()
 		{
 			PS.timerStop(myTimer);
 			PS.timerStop(drawTimer);
+			ClearList(shots);
+			ClearList(ufos);
 		}
 	};
 	
