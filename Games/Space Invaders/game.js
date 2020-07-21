@@ -71,7 +71,7 @@ var G = function()
 	var shots = [null], ufos = [null];
 	var gameStates = {win: false, shot: false, ufo: false};
 	var timerIntervals = {update : 1, shot : 2, ufo : 120, defender : 6, step : 0};
-	var myTimer, drawTimer;
+	var myTimer, drawTimer, collisionTimer;
 	
 	var defender = 
 	{
@@ -141,11 +141,65 @@ var G = function()
 				return true;
 		
 		return false;
+	}; // Checks to see if the passed in location is still in bounds as opposed to out of bounds.
+
+	var UfoCollisionCheck = function(px, py)
+	{
+		var collisionCall = false;
+		for(var y = 0; y < 3; y++)
+		{
+			for(var x = y; x < 5 - y; x++)
+			{
+				switch(PS.color(px + x, py - y))
+				{
+					case PS.COLOR_BLACK:
+					case 12790527:
+					case 13464048:
+					case 16777215:
+						break;
+					default: collisionCall = true;
+						break;
+				}
+			}
+		} // Check the area of the UFO
+
+		for(var x = 0; x < 5; x++)
+		{
+			switch(PS.color(px + x, py + 1))
+			{
+				case PS.COLOR_BLACK:
+				case 12790527:
+				case 13464048:
+				case 16777215:
+					break;
+				default:
+					collisionCall = true;
+			}
+			if(PS.color(px + x, py + 1) != PS.COLOR_BLACK && PS.color(px + x, py + 1) != 12790527 && PS.color(px + x, py + 1) != 13464048 && PS.color(px + x, py + 1) != 16777215)
+				collisionTimer = true;
+		} // Check the area just below the UFO
+
+		return collisionCall;
+	}; // Organized to check based off of ufo form.
+
+	DestroyObjectFromList = function(iList, i) 
+	{
+		if(i !== iList.length - 1)
+		{
+			var tmp = iList[i];
+			iList[i] = iList[iList.length-1];
+			iList[iList.length-1] = tmp;
+		}
+
+		iList.pop();
 	};
 
 	var OnTick = function()
 	{
+		if(gameStates.win) return;
+
 		timerIntervals.step++;
+		timerIntervals.shot++;
 		
 		if(!gameStates.shot)
 		{
@@ -166,7 +220,19 @@ var G = function()
 				timerIntervals.ufo = 0;
 			}
 		} // Handles the ufos ability to clone itself.
-	};
+
+		if(timerIntervals.shot === 2)
+		{
+			timerIntervals.shot = 0;
+			for(var i = 0; i < shots.length; i++)
+			{
+				if(CheckAgainstBounds(shots[i].x, shots[i].y - 1))
+					shots[i].Move();
+				else
+					DestroyObjectFromList(shots, i);
+			}
+		} // Handles updating each shot in list shots movement.
+	}; // Centralizes game update logic. 
 
 	var myLoader = function(image)
 	{
@@ -241,19 +307,33 @@ var G = function()
 			PS.debug("\nUfo ready in " + (120 - timerIntervals.ufo));
 		else
 			PS.debug("\nUfo ready!");
+
 	}; // Draws in order of bottom level to top level so the background doesn't overwrite anything.
 	
+	var OnTick_Collision = function()
+	{
+		for(var i = 0; i < ufos.length; i++)
+		{
+			if(UfoCollisionCheck(ufos[i].x, ufos[i].y))
+				DestroyObjectFromList(ufos, i);
+		} // Handles ufo collision information.
+
+		for(var i = 0; i < shots.length; i++)
+		{
+			switch(PS.color(shots[i].x, shots[i].y))
+			{
+				case PS.COLOR_BLACK:
+				case 15987477:
+					break;
+				default: DestroyObjectFromList(shots, i);
+					break;
+			}
+		} // Handles shot collision information.
+	}; // Centralizes Collision occurences.
+
 	var ClearList = function(iList)
 	{
-		var i, length;
-        length = iList.length;
-
-		for (i = 0; length > i;)
-		{
-			iList[i] = null;
-			iList.shift();
-			length = iList.length;
-		}
+		iList.length = 0;
 	};
 	
 	var exports = 
@@ -276,9 +356,11 @@ var G = function()
 			
 			timerIntervals.ufo = 0;
 			timerIntervals.defender = 0;
+			timerIntervals.shot = 0;
 			
 			myTimer = PS.timerStart(timerIntervals.update, OnTick);
 			drawTimer = PS.timerStart(timerIntervals.update, OnTick_Draw);
+			collisionTimer = PS.timerStart(timerIntervals.update, OnTick_Collision);
 		},
 		
 		KeyPress : function(key, shift, ctrl, options)
@@ -291,6 +373,7 @@ var G = function()
 					case 114: // stop all the timers so reset doesn't get angry.
 						PS.timerStop(myTimer);
 						PS.timerStop(drawTimer);
+						PS.timerStop(collisionTimer);
 						this.Init();
 						break;
 					default:
@@ -357,6 +440,7 @@ var G = function()
 		{
 			PS.timerStop(myTimer);
 			PS.timerStop(drawTimer);
+			PS.timerStop(collisionTimer);
 			ClearList(shots);
 			ClearList(ufos);
 		}
