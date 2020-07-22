@@ -70,8 +70,9 @@ var G = function()
 	var width = 32, height = 32;
 	var shots = [null], ufos = [null];
 	var gameStates = {win: false, shot: false, ufo: false};
-	var timerIntervals = {update : 1, shot : 2, ufo : 120, defender : 6, step : 0};
+	var timerIntervals = {update : 1, shot : 2, ufo : 120, defender : 8, step : 0};
 	var myTimer, drawTimer, collisionTimer;
+	var hitX = -1, hitY = -1;
 	
 	var defender = 
 	{
@@ -157,7 +158,10 @@ var G = function()
 					case 13464048:
 					case 16777215:
 						break;
-					default: collisionCall = true;
+					default: 
+						collisionCall = true;
+						hitX = px + x;
+						hitY = py - y;
 						break;
 				}
 			}
@@ -174,9 +178,10 @@ var G = function()
 					break;
 				default:
 					collisionCall = true;
+					hitX = px + x;
+					hitY = py + 1;
+					break;
 			}
-			if(PS.color(px + x, py + 1) != PS.COLOR_BLACK && PS.color(px + x, py + 1) != 12790527 && PS.color(px + x, py + 1) != 13464048 && PS.color(px + x, py + 1) != 16777215)
-				collisionTimer = true;
 		} // Check the area just below the UFO
 
 		return collisionCall;
@@ -204,7 +209,7 @@ var G = function()
 		if(!gameStates.shot)
 		{
 			timerIntervals.defender++;
-			if(timerIntervals.defender == 6)
+			if(timerIntervals.defender == 8)
 			{
 				gameStates.shot = true;
 				timerIntervals.defender = 0;
@@ -312,6 +317,8 @@ var G = function()
 	
 	var OnTick_Collision = function()
 	{
+		hitX = -1;
+		hitY = -1;
 		for(var i = 0; i < ufos.length; i++)
 		{
 			if(UfoCollisionCheck(ufos[i].x, ufos[i].y))
@@ -320,15 +327,26 @@ var G = function()
 
 		for(var i = 0; i < shots.length; i++)
 		{
-			switch(PS.color(shots[i].x, shots[i].y))
+			if(shots[i].x === hitX && shots[i].y === hitY)
 			{
-				case PS.COLOR_BLACK:
-				case 15987477:
-					break;
-				default: DestroyObjectFromList(shots, i);
-					break;
+				DestroyObjectFromList(shots, i);
+				PS.audioPlay("fx_coin7");
+			}
+			else
+			{
+				switch(PS.color(shots[i].x, shots[i].y))
+				{
+					case PS.COLOR_BLACK:
+					case 15987477:
+						break;
+					default: DestroyObjectFromList(shots, i);
+						break;
+				}
 			}
 		} // Handles shot collision information.
+
+		if(ufos.length === 0)
+			gameStates.win = true;
 	}; // Centralizes Collision occurences.
 
 	var ClearList = function(iList)
@@ -374,7 +392,7 @@ var G = function()
 						PS.timerStop(myTimer);
 						PS.timerStop(drawTimer);
 						PS.timerStop(collisionTimer);
-						this.Init();
+						exports.Init();
 						break;
 					default:
 						break;
@@ -393,8 +411,11 @@ var G = function()
 							defender.move(-1);
 						break;
 					case 32: //PS.debug("KEY === 'SPACE_BAR'\n");
-						MakeShot();
-						gameStates.shot = false;
+						if(gameStates.shot)
+						{
+							MakeShot();
+							gameStates.shot = false;
+						}
 						break;
 					
 					/* UFO Keys */
