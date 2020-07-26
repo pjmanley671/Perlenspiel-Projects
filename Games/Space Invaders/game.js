@@ -83,7 +83,7 @@ var G = function()
 			this.y = height - 3;
 		},
 
-		move : function(px)
+		Move : function(px)
 		{
 			this.x += px;
 		}
@@ -101,7 +101,7 @@ var G = function()
 				this.y = 4;
 			},
 
-			move : function(px, py)
+			Move : function(px, py)
 			{
 				this.x += px;
 				this.y += py;
@@ -383,7 +383,7 @@ var G = function()
 		
 		KeyPress : function(key, shift, ctrl, options)
 		{
-			/* TODO : Add in control logic to check if movement is in boundary or not. Add in control logic to check  to see if ufo is in the spawn location. */
+			/* TODO : Add in control logic to check  to see if ufo is in the spawn location. */
 			if(gameStates.win)
 			{
 				switch(key)
@@ -404,11 +404,11 @@ var G = function()
 					/* Defender Keys */
 					case 100: //PS.debug("KEY === 'D'\n");
 						if(CheckAgainstBounds(defender.x + 5, defender.y))
-							defender.move(1);
+							defender.Move(1);
 						break;
 					case 97: //PS.debug("KEY === 'A'\n");
 						if(CheckAgainstBounds(defender.x, defender.y))
-							defender.move(-1);
+							defender.Move(-1);
 						break;
 					case 32: //PS.debug("KEY === 'SPACE_BAR'\n");
 						if(gameStates.shot)
@@ -423,33 +423,33 @@ var G = function()
 						for(var i = 0; i < ufos.length; i++)
 						{
 							if(CheckAgainstBounds(ufos[i].x, ufos[i].y - 2))
-								ufos[i].move(0, -1);
+								ufos[i].Move(0, -1);
 						}
                         break;
                     case PS.KEY_ARROW_DOWN:
 						for(var i = 0; i < ufos.length; i++)
 						{
 							if(CheckAgainstBounds(ufos[i].x, ufos[i].y + 1))
-								ufos[i].move(0, 1);
+								ufos[i].Move(0, 1);
 						}
                         break;
                     case PS.KEY_ARROW_RIGHT:
 						for(var i = 0; i < ufos.length; i++)
 						{
 							if(CheckAgainstBounds(ufos[i].x + 5, ufos[i].y))
-								ufos[i].move(1, 0);
+								ufos[i].Move(1, 0);
 						}
                         break;
                     case PS.KEY_ARROW_LEFT:
 						for(var i = 0; i < ufos.length; i++)
 						{
 							if(CheckAgainstBounds(ufos[i].x, ufos[i].y))
-								ufos[i].move(-1, 0);
+								ufos[i].Move(-1, 0);
 						}
                         break;
-                    case 47: //PS.debug("KEY === 'forward slash'\n")
-						MakeUFO();
-						gameStates.ufo = false;
+					case 47: //PS.debug("KEY === 'forward slash'\n")
+							MakeUFO();
+							gameStates.ufo = false;
                         break;
 					default:
 						break;
